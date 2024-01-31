@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"io"
@@ -12,8 +11,8 @@ import (
 )
 
 type Commmit struct {
-	Key   time.Time
-	Count int
+	Key    time.Time
+	Amount int
 }
 
 func verifierDir(folder string) bool {
@@ -40,7 +39,7 @@ func verifierDir(folder string) bool {
 	return false
 }
 
-func MapCommits(folder string) []Commmit {
+func getCommits(folder string) []Commmit {
 	repo, err := git.PlainOpen(folder)
 
 	if err != nil {
@@ -59,31 +58,30 @@ func MapCommits(folder string) []Commmit {
 		log.Fatal(err)
 	}
 
-	SliceWeek := []Commmit{}
-	var aux time.Time
-	var auxTwo time.Time
+	SliceCommit := []Commmit{}
+	var temp, tempFormat time.Time
 	err = cIter.ForEach(func(commit *object.Commit) error {
-		if len(SliceWeek) == 0 {
-			aux = commit.Author.When
-			SliceWeek = append(SliceWeek, Commmit{commit.Author.When, 1})
+		if len(SliceCommit) == 0 {
+			temp = commit.Author.When
+			SliceCommit = append(SliceCommit, Commmit{commit.Author.When, 1})
 		} else {
-			if auxTwo.Format("01/02/2006") != commit.Author.When.Format("01/02/2006") {
-				SliceWeek = append(SliceWeek, Commmit{commit.Author.When, 1})
-				aux = commit.Author.When
+			if tempFormat.Format("01/02/2006") != commit.Author.When.Format("01/02/2006") {
+				SliceCommit = append(SliceCommit, Commmit{commit.Author.When, 1})
+				temp = commit.Author.When
 			} else {
-				for i := range SliceWeek {
-					if SliceWeek[i].Key == aux {
-						SliceWeek[i].Count += 1
+				for i := range SliceCommit {
+					if SliceCommit[i].Key == temp {
+						SliceCommit[i].Amount += 1
 						break
 					}
 				}
 			}
 		}
-		auxTwo = commit.Author.When
+		tempFormat = commit.Author.When
 		return nil
 	})
 
-	return SliceWeek
+	return SliceCommit
 }
 
 func main() {
@@ -91,11 +89,11 @@ func main() {
 	flag.StringVar(&folder, "add", "", "novo diretório para análise")
 	flag.Parse()
 	if verifierDir(folder) {
-		MapCommits(folder)
-		SliceCommit := MapCommits(folder)
+		SliceCommit := getCommits(folder)
 
 		for i := range SliceCommit {
-			fmt.Printf("%q ----- %d\n", SliceCommit[i].Key, SliceCommit[i].Count)
+			i++
+			//fmt.Printf("%q ----- %d\n", SliceCommit[i].Key, SliceCommit[i].Amount)
 		}
 
 	}
