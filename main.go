@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"gopkg.in/src-d/go-git.v4"
@@ -88,62 +87,60 @@ func getCommits(folder string) []Commmit {
 	return SliceCommit
 }
 
-func tableCommits(SliceCommit []Commmit) {
+func tableCommits(SliceCommit []Commmit, weeks string) {
 	now := time.Now()
-	now = now.AddDate(0, 0, 1)
 	var ant time.Time
-	aux := 0
+
+	numWeeks, err := strconv.Atoi(weeks)
+
+	if err != nil {
+		panic(err)
+	}
 
 	switch now.Format("Monday") {
 	case "Sunday":
 		ant = now.AddDate(0, 0, -8*7)
-		aux = 0
 	case "Monday":
-		ant = now.AddDate(0, 0, -1+(-8*7))
-		aux = 1
+		ant = now.AddDate(0, 0, -1+(-numWeeks*7))
 	case "Tuesday":
-		ant = now.AddDate(0, 0, -2+(-8*7))
-		aux = 2
+		ant = now.AddDate(0, 0, -2+(-numWeeks*7))
 	case "Wednesday":
-		ant = now.AddDate(0, 0, -3+(-8*7))
-		aux = 3
+		ant = now.AddDate(0, 0, -3+(-numWeeks*7))
 	case "Thursday":
-		ant = now.AddDate(0, 0, -4+(-8*7))
-		aux = 4
+		ant = now.AddDate(0, 0, -4+(-numWeeks*7))
 	case "Friday":
-		ant = now.AddDate(0, 0, -5+(-8*7))
-		aux = 5
+		ant = now.AddDate(0, 0, -5+(-numWeeks*7))
 	case "Saturday":
-		ant = now.AddDate(0, 0, -6+(-8*7))
-		aux = 6
+		ant = now.AddDate(0, 0, -6+(-numWeeks*7))
 	}
+
 	dateCommit := []string{}
 
-	flag := false
-	fmt.Println(now)
+	aux := false
+
+	now = now.AddDate(0, 0, 1)
 	for ant.Before(now) {
 		for _, commit := range SliceCommit {
 			if commit.Key.Format("02/01/2006") == ant.Format("02/01/2006") {
 				dateCommit = append(dateCommit, "( "+ant.Format("02-01")+" - "+"["+strconv.Itoa(commit.Amount)+"]"+" )")
-				flag = true
+				aux = true
 			}
 		}
-		if flag == false {
+		if aux == false {
 			dateCommit = append(dateCommit, "( "+ant.Format("02")+" )")
 		}
-		flag = false
+		aux = false
 		ant = ant.AddDate(0, 0, 1)
 	}
-	createTable(dateCommit, aux)
+	createTable(dateCommit)
 }
 
-func createTable(dateCommit []string, aux int) {
+func createTable(dateCommit []string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"  Sunday  ", "  Monday  ", "  Tuesday  ", "  Wednesday  ", "  Thursday  ", "  Friday  ", "  Saturday  "})
 
 	var tempRow []interface{}
-	//fmt.Println(dateCommit)
 	for i, commit := range dateCommit {
 		tempRow = append(tempRow, commit)
 
@@ -168,10 +165,12 @@ func createTable(dateCommit []string, aux int) {
 
 func main() {
 	var folder string
+	var weeks string
 	flag.StringVar(&folder, "add", "", "novo diretório para análise")
+	flag.StringVar(&weeks, "weeks", "8", "define quantas semanas serão analisadas")
 	flag.Parse()
 	if verifierDir(folder) {
 		SliceCommit := getCommits(folder)
-		tableCommits(SliceCommit)
+		tableCommits(SliceCommit, weeks)
 	}
 }
