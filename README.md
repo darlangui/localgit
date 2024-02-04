@@ -1,2 +1,3 @@
-# localgit
-Analisa as contribuições locais utilizando o Git Logs
+# localgit - Manipulando Contribuições Locais do Git com Go 
+
+
